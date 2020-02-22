@@ -1,0 +1,22 @@
+[package]
+name = "k8s-aws-nlb-proxy-protocol-operator"
+version = "0.1.0"
+authors = ["Jarred Nicholls <jarred.nicholls@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+env_logger = "0.7"
+futures = "0.3"
+k8s-openapi = { version = "0.7", default-features = false, features = ["v1_13"] }
+kube = { version = "0.25", features = ["openapi"] }
+log = "0.4"
+openssl = "0.10"
+rusoto_core = "0.43.0-beta"
+rusoto_elbv2 = "0.43.0-beta"
+rusoto_resourcegroupstaggingapi = "0.43.0-beta"
+serde = "1.0"
+serde_json = "1.0"
+tokio = { version = "0.2", features = ["full"] }
+
+[features]
+fips = []
