@@ -11,8 +11,7 @@ use kube::{
 };
 use rusoto_core::Region;
 use rusoto_elbv2::{
-    DescribeTargetGroupAttributesInput, Elb, ElbClient, ModifyTargetGroupAttributesInput,
-    TargetGroupAttribute,
+    DescribeTargetGroupAttributesInput, Elb, ElbClient, ModifyTargetGroupAttributesInput, TargetGroupAttribute,
 };
 use rusoto_resourcegroupstaggingapi::{
     GetResourcesInput, ResourceGroupsTaggingApi, ResourceGroupsTaggingApiClient, TagFilter,
@@ -34,10 +33,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
     tokio::spawn(poll_services(rf.clone()));
     loop {
         match scan_services(&namespace, &k8s_client, &rf).await {
-            Err(e) => error!(
-                "An error occurred while scanning or processing services: {}.",
-                e
-            ),
+            Err(e) => error!("An error occurred while scanning or processing services: {}.", e),
             _ => (),
         }
         tokio::time::delay_for(Duration::from_secs(10)).await;
@@ -45,9 +41,7 @@ async fn main() -> Result<(), Box<dyn StdError>> {
 }
 
 async fn load_api_client(namespace: &str) -> Result<Api<Service>, Box<dyn StdError>> {
-    let config = if env::var("KUBERNETES_SERVICE_HOST").is_ok()
-        && env::var("KUBERNETES_SERVICE_PORT").is_ok()
-    {
+    let config = if env::var("KUBERNETES_SERVICE_HOST").is_ok() && env::var("KUBERNETES_SERVICE_PORT").is_ok() {
         config::incluster_config()
     } else {
         config::load_kube_config().await
@@ -79,10 +73,7 @@ async fn scan_services(
     let services = rf.state().await?.into_iter().filter(is_matching_service);
 
     for service in services {
-        info!(
-            "Turning on PROXY protocol for the service '{}'.",
-            service.metadata.name
-        );
+        info!("Turning on PROXY protocol for the service '{}'.", service.metadata.name);
 
         let input = GetResourcesInput {
             resource_type_filters: Some(vec!["elasticloadbalancing:targetgroup".to_string()]),
@@ -96,11 +87,7 @@ async fn scan_services(
 
         let target_group_arns = output
             .resource_tag_mapping_list
-            .map(|rtml| {
-                rtml.into_iter()
-                    .filter_map(|rtm| rtm.resource_arn)
-                    .collect::<Vec<_>>()
-            })
+            .map(|rtml| rtml.into_iter().filter_map(|rtm| rtm.resource_arn).collect::<Vec<_>>())
             .unwrap_or_default();
 
         if target_group_arns.is_empty() {
@@ -121,8 +108,7 @@ async fn scan_services(
                 .attributes
                 .map(|attributes| {
                     attributes.into_iter().any(|attribute| {
-                        attribute.key.as_ref().map(|k| k.as_str())
-                            == Some("proxy_protocol_v2.enabled")
+                        attribute.key.as_ref().map(|k| k.as_str()) == Some("proxy_protocol_v2.enabled")
                             && attribute.value.as_ref().map(|k| k.as_str()) == Some("false")
                     })
                 })
@@ -138,10 +124,7 @@ async fn scan_services(
                 };
                 elb_client.modify_target_group_attributes(input).await?;
 
-                info!(
-                    "Service '{}' now has PROXY protocol enabled.",
-                    service.metadata.name
-                );
+                info!("Service '{}' now has PROXY protocol enabled.", service.metadata.name);
             }
 
             let patch = json!({
@@ -152,16 +135,9 @@ async fn scan_services(
                 }
             });
             k8s_client
-                .patch(
-                    &service.metadata.name,
-                    &Default::default(),
-                    serde_json::to_vec(&patch)?,
-                )
+                .patch(&service.metadata.name, &Default::default(), serde_json::to_vec(&patch)?)
                 .await?;
-            info!(
-                "Service '{}' attributes have been patched.",
-                service.metadata.name
-            );
+            info!("Service '{}' attributes have been patched.", service.metadata.name);
         }
     }
 
