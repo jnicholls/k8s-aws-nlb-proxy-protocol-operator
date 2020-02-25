@@ -147,7 +147,7 @@ async fn scan_services(
                         key: Some("proxy_protocol_v2.enabled".to_string()),
                         value: Some(value.to_string()),
                     }],
-                    target_group_arn,
+                    target_group_arn: target_group_arn.clone(),
                 };
                 elb_client.modify_target_group_attributes(input).await?;
 
@@ -164,7 +164,10 @@ async fn scan_services(
                     .patch(&service.metadata.name, &Default::default(), serde_json::to_vec(&patch)?)
                     .await?;
 
-                info!("Service '{}' now has PROXY protocol {}.", service.metadata.name, status);
+                info!(
+                    "Target Group '{}' for service '{}' now has PROXY protocol {}.",
+                    target_group_arn, service.metadata.name, status
+                );
             }
         }
     }
@@ -185,13 +188,13 @@ fn is_matching_service(service: Service) -> Option<(Service, bool)> {
         .map(AsRef::as_ref);
 
     match (lb_type, lb_proxy, op_handled) {
-        // PROXY has already been applied, so we'll ignore this service.
+        // PROXY has already been enabled, so we'll ignore this service.
         (Some("nlb"), Some("*"), Some("*")) => None,
 
         // PROXY annotations are present but PROXY has not been enabled yet.
         (Some("nlb"), Some("*"), _) => Some((service, true)),
 
-        // PROXY has been applied but annotations have been removed since, so we will disable PROXY.
+        // PROXY has been enabled but annotations have been removed since, so we will disable PROXY.
         (_, _, Some("*")) => Some((service, false)),
 
         // Any other results are ignored.
