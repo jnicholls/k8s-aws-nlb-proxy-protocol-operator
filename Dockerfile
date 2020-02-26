@@ -8,4 +8,9 @@ RUN yum install -y openssl && \
 
 COPY k8s-aws-nlb-proxy-protocol-operator /usr/bin
 
-ENTRYPOINT ["k8s-aws-nlb-proxy-protocol-operator"]
+ENV TINI_VERSION v0.18.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
+ENTRYPOINT ["tini", "--"]
+
+CMD ["k8s-aws-nlb-proxy-protocol-operator"]
