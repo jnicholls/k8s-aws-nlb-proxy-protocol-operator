@@ -24,6 +24,8 @@ type Service = Object<ServiceSpec, ServiceStatus>;
 async fn main() -> Result<(), Box<dyn StdError>> {
     env_logger::init();
 
+    enable_fips();
+
     let namespace = env::var("NAMESPACE").unwrap_or("default".into());
     info!("Scanning for services in namespace '{}'.", namespace);
 
@@ -200,4 +202,13 @@ fn is_matching_service(service: Service) -> Option<(Service, bool)> {
         // Any other results are ignored.
         _ => None,
     }
+}
+
+#[cfg(not(feature = "fips"))]
+fn enable_fips() {}
+
+#[cfg(feature = "fips")]
+fn enable_fips() {
+    openssl::fips::enable(true).unwrap();
+    info!("OpenSSL FIPS compliant module enabled.");
 }
