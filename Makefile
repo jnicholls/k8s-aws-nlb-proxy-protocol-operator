@@ -4,7 +4,7 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 VERSION  ?= 1
 
 .DEFAULT: all
-.PHONY: all build build-env build-fips clean push push-build-env push-fips
+.PHONY: all build build-env clean push push-build-env
 
 all: build
 
@@ -16,20 +16,14 @@ build:
 	docker tag jarrednicholls/k8s-aws-nlb-proxy-protocol-operator:$(VERSION) jarrednicholls/k8s-aws-nlb-proxy-protocol-operator
 
 build-env:
-	docker build -t jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build -f $(ROOT_DIR)/build/Dockerfile $(ROOT_DIR)/build
-	docker build -t jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build:fips -f $(ROOT_DIR)/build/Dockerfile.fips $(ROOT_DIR)/build
-
-build-fips:
-	docker run --rm -it -v $(ROOT_DIR):/build jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build:fips cargo build --release --features fips
-	mkdir -p $(ROOT_DIR)/target/release/staging
-	cp $(ROOT_DIR)/target/release/k8s-aws-nlb-proxy-protocol-operator $(ROOT_DIR)/target/release/staging/k8s-aws-nlb-proxy-protocol-operator
-	docker build -t jarrednicholls/k8s-aws-nlb-proxy-protocol-operator:$(VERSION)-fips -f $(ROOT_DIR)/Dockerfile.fips $(ROOT_DIR)/target/release/staging
+	docker build -t jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build -f $(ROOT_DIR)/Dockerfile.build_env $(ROOT_DIR)/src
 
 clean:
 	docker run --rm -it -v $(ROOT_DIR):/build jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build cargo clean
 
 push:
-	docker push jarrednicholls/k8s-aws-nlb-proxy-protocol-operator
+	docker push jarrednicholls/k8s-aws-nlb-proxy-protocol-operator:$(VERSION)
+	docker push jarrednicholls/k8s-aws-nlb-proxy-protocol-operator:latest
 
 push-build-env:
 	docker push jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build

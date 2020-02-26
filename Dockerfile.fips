@@ -1,9 +1,0 @@
-FROM centos:7
-
-RUN yum install -y openssl && \
-    yum clean all && \
-    rm -rf /var/cache/yum
-
-COPY k8s-aws-nlb-proxy-protocol-operator /usr/bin
-
-ENTRYPOINT ["k8s-aws-nlb-proxy-protocol-operator"]

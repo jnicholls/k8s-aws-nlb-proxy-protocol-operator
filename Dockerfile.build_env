@@ -1,3 +1,5 @@
+# CentOS 7 has a build of OpenSSL that includes the FIPS 140-2 Object Module.
+# This is the only reason we are using centos:7 as a base image :)
 FROM centos:7
 
 RUN yum install -y gcc openssl-devel && \
