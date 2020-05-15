@@ -10,8 +10,8 @@ all: build
 
 build:
 	docker run --rm -it -v $(ROOT_DIR):/build jarrednicholls/k8s-aws-nlb-proxy-protocol-operator-build cargo build --release
-	mkdir -p $(ROOT_DIR)/target/release/staging
-	cp $(ROOT_DIR)/target/release/k8s-aws-nlb-proxy-protocol-operator $(ROOT_DIR)/target/release/staging/k8s-aws-nlb-proxy-protocol-operator
+	sudo mkdir -p $(ROOT_DIR)/target/release/staging
+	sudo cp $(ROOT_DIR)/target/release/k8s-aws-nlb-proxy-protocol-operator $(ROOT_DIR)/target/release/staging/k8s-aws-nlb-proxy-protocol-operator
 	docker build -t jarrednicholls/k8s-aws-nlb-proxy-protocol-operator:$(VERSION) -f $(ROOT_DIR)/Dockerfile $(ROOT_DIR)/target/release/staging
 	docker tag jarrednicholls/k8s-aws-nlb-proxy-protocol-operator:$(VERSION) jarrednicholls/k8s-aws-nlb-proxy-protocol-operator
 

@@ -11,9 +11,21 @@ jobs:
       - run:
           name: Build dev image
           command: make build-env
+      - restore_cache:
+          name: Restore cache
+          key: cache-stable-{{ arch }}-{{ .Environment.CIRCLE_JOB }}
       - run:
           name: Build image
           command: make build
+      - save_cache:
+          name: Save cache
+          # We use {{ epoch }} to always upload a fresh cache:
+          # Of course, restore_cache will not find this exact key,
+          # but it will fall back to the closest key (aka the most recent).
+          # See https://discuss.circleci.com/t/add-mechanism-to-update-existing-cache-key/9014/13
+          key: cache-stable-{{ arch }}-{{ .Environment.CIRCLE_JOB }}-{{ epoch }}
+          paths:
+            - "./target"
       - run:
           name: Re-tag image
           command: docker tag jarrednicholls/k8s-aws-nlb-proxy-protocol-operator $DOCKER_REPO:$CIRCLE_SHA1
